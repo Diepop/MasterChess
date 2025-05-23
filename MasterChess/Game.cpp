@@ -6,13 +6,10 @@
 #include "IPlayer.hpp"
 #include "IInput.hpp"
 
-#include <future>
-#include <execution>
-
-#include <cassert>
+#include <algorithm>
 #include <iterator>
 
-using namespace std::chrono_literals;
+#include <cassert>
 
 namespace MasterChess
 {
@@ -42,14 +39,16 @@ namespace MasterChess
 
     GameResult Game::Play()
     {
-        listener.OnGameStart(this);
+        for (auto listener : listeners)
+            listener->OnGameStart(this);
         size_t i = 0;
         while (true)
         {
             currentPlayer = players[i].get();
             if (auto result = IsGameOver(currentPlayer))
             {
-                listener.OnGameOver(result.get());
+                for (auto listener : listeners)
+                    listener->OnGameOver(result.get());
                 return *result;
             }
             unique_ptr<IMovement> movement;
@@ -62,7 +61,8 @@ namespace MasterChess
 
     void Game::AddListener(IGameListener* listener)
     {
-        this->listener.AddListener(listener);
+        assert(find(listeners.begin(), listeners.end(), listener) == listeners.end() && "Listener is already listening!");
+        listeners.emplace_back(listener);
     }
 
     vector<IPlayer*> Game::Players() const
@@ -76,6 +76,7 @@ namespace MasterChess
     {
         if (players.empty())
             currentPlayer = player.get();
+        AddListener(player.get());
         return players.emplace_back(move(player)).get();
     }
 
@@ -88,6 +89,7 @@ namespace MasterChess
 
     IPiece* Game::AddPiece(unique_ptr<IPiece> piece)
     {
+        AddListener(piece.get());
         return pieces.emplace_back(move(piece)).get();
     }
 
@@ -96,16 +98,23 @@ namespace MasterChess
         assert(currentPlayer == piece->Player());
         if (isSimulating)
             return nullptr;
-        auto ptr = pieces.emplace_back(currentPlayer->Input()->SelectPromotion(currentPlayer)).get();
+        auto ptr = AddPiece(currentPlayer->Input()->SelectPromotion(currentPlayer));
         ptr->OnGameStart(this);
         return ptr;
+    }
+
+    void Game::NotifyPlayerColorChange(IPlayer* player)
+    {
+        for (auto listener : listeners)
+            listener->OnPlayerColorChange(player);
     }
 
     void Game::ExecuteMovement(unique_ptr<IMovement> movement)
     {
         movement->Execute();
         movements.emplace_back(move(movement));
-        listener.OnMovementExecution(LastMovement());
+        for (auto listener : listeners)
+            listener->OnMovementExecution(LastMovement());
     }
 
     void Game::UndoLastMovement()
@@ -114,7 +123,8 @@ namespace MasterChess
         LastMovement()->Undo();
         auto movement = move(movements.back());
         movements.resize(movements.size() - 1);
-        listener.OnMovementUndo(movement.get());
+        for (auto listener : listeners)
+            listener->OnMovementUndo(movement.get());
     }
 
     void Game::SimulateMovementExecution(unique_ptr<IMovement>& movement)
@@ -141,35 +151,5 @@ namespace MasterChess
         AddListener(board.get());
         this->board = move(board);
     }
-
-    template<class Range, class Fn, class... Args>
-    static void pfor(Range&& rng, Fn fn, Args&&... args)
-    {
-        for_each(std::execution::par_unseq, std::begin(rng), std::end(rng), [=](IGameListener* listener) { (listener->*fn)(args...); });
-    }
-
-    void Game::GameBroadcastListener::OnGameStart(Game* game)
-    {
-        pfor(listeners, &IGameListener::OnGameStart, game);
-    }
-
-    void Game::GameBroadcastListener::OnMovementExecution(IMovement* movement)
-    {
-        pfor(listeners, &IGameListener::OnMovementExecution, movement);
-    }
-
-    void Game::GameBroadcastListener::OnMovementUndo(IMovement* movement)
-    {
-        pfor(listeners, &IGameListener::OnMovementUndo, movement);
-    }
-
-    void Game::GameBroadcastListener::OnGameOver(GameResult* result)
-    {
-        pfor(listeners, &IGameListener::OnGameOver, result);
-    }
-
-    void Game::GameBroadcastListener::AddListener(IGameListener* listener)
-    {
-        listeners.emplace_back(listener);
-    }
+    
 }

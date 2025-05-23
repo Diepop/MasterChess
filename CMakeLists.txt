@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 add_definitions(-DNOMINMAX)
 
 project("Master Chess")
@@ -15,15 +15,14 @@ set(PROC_LIBS Threads::Threads)
 set(ConChessLibs MasterChess Math Arduino Unity)
 
 if(WIN32)
-    find_package(fmt CONFIG REQUIRED)
     find_package(tiny-process-library CONFIG REQUIRED)
-    set(PROC_LIBS ${PROC_LIBS} fmt::fmt tiny-process-library::tiny-process-library)
-    set(ConChessLibs ${ConChessLibs} fmt::fmt tiny-process-library::tiny-process-library)
+    set(PROC_LIBS ${PROC_LIBS} tiny-process-library::tiny-process-library)
+    set(ConChessLibs ${ConChessLibs} tiny-process-library::tiny-process-library)
     add_subdirectory("Windows")
     set(ConChessLibs ${ConChessLibs} Windows)
 else()
     add_subdirectory("Linux")
-    set(PROC_LIBS ${PROC_LIBS} -lfmt -ltiny-process-library -lwiringPi)
+    set(PROC_LIBS ${PROC_LIBS} -ltiny-process-library -lwiringPi)
 endif()
 
 add_subdirectory("Math")

@@ -3,6 +3,10 @@
 #include "MasterChess/IPiece.hpp"
 #include "MasterChess/Inputs/TwoStepsInput.hpp"
 
+namespace Unity {
+    struct UnityGameListener;
+}
+
 namespace MasterChess
 {
     using MasterChess::IPiece;
@@ -16,6 +20,8 @@ namespace MasterChess
     struct ConsoleChessGameListener final : IGameListener, TwoStepsInput
     {
         explicit ConsoleChessGameListener(IConsole* console, const Vector2Int& size = {12, 7});
+
+        void OnPlayerColorChange(IPlayer* player) override;
 
         void OnGameStart(Game* game) override;
 
@@ -32,6 +38,8 @@ namespace MasterChess
         void SelectPosition();
 
         std::unique_ptr<IPiece> SelectPromotion(IPlayer* player) override;
+
+        Unity::UnityGameListener* UnityListener = nullptr;
 
     private:
         IConsole* console;

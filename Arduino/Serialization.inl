@@ -3,10 +3,10 @@
 namespace Arduino
 {
     template<class T, class Alloc>
-    const string Serializer<std::vector<T, Alloc>>::Id = fmt::format("[{}]", Serializer<T>::Id);
+    const string Serializer<std::vector<T, Alloc>>::Id = std::format("[{}]", Serializer<T>::Id);
 
     template<class... Args>
-    const string Serializer<tuple<Args...>>::Id = format("[{}]", fmt::join(vector<string_view>{ Serializer<Args>::Id... }, ""));
+    const string Serializer<tuple<Args...>>::Id = std::format("[{}]", fmt::join(vector<string_view>{ Serializer<Args>::Id... }, ""));
 
     template <class T>
     const string_view Serializer<T, std::enable_if_t<std::is_integral_v<T> || std::is_same_v<T, float>>>::Id = []() -> string_view

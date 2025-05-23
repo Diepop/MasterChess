@@ -8,6 +8,7 @@
 
 namespace Windows
 {
+
     Console::Console(int rows, int columns) : Rows(rows), Columns(columns),
         stdHandle(GetStdHandle(STD_OUTPUT_HANDLE)),
         handle(CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr), [](void* handle) { CloseHandle(handle); }),
@@ -16,7 +17,6 @@ namespace Windows
         offsets.emplace(Vector2Int::Zero);
         auto result = SetConsoleActiveScreenBuffer(handle.get());
         assert(result);
-        ShowWindow(GetConsoleWindow(), SW_SHOWMAXIMIZED);
     }
 
     Console::~Console()

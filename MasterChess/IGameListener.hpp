@@ -1,8 +1,8 @@
 #pragma once
-#include <vector>
 
 namespace MasterChess
 {
+    struct IPlayer;
     struct GameResult;
     struct Game;
     struct IMovement;
@@ -31,6 +31,12 @@ namespace MasterChess
         /// </summary>
         /// <param name="result">Resultado do jogo contento as suas informações.</param>
         virtual void OnGameOver(GameResult* result) {  }
+
+        /// <summary>
+        /// Executada quando um dos jogadores troca a sua cor.
+        /// </summary>
+        /// <param name="player"></param>
+        virtual void OnPlayerColorChange(IPlayer* player) {  }
     };    
 
 }

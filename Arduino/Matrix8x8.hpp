@@ -14,10 +14,10 @@ namespace Arduino
             for (auto v : area.Positions())
                 operator()(v.x, v.y, true);
         }
-        bool operator()(int i, int j) const { return Value & (uint64_t)1 << (j + (7 - i) * 8); }
+        bool operator()(int i, int j) const { return Value & selectBit(i, j); }
         void operator()(int i, int j, bool v)
         {
-            auto bit = (uint64_t)1 << (j + (7 - i) * 8);
+            auto bit = selectBit(i, j);
             if (v) Value |= bit;
             else Value &= ~bit;
         }
@@ -32,5 +32,8 @@ namespace Arduino
 
         friend bool operator==(const Matrix8x8& lhs, const Matrix8x8& rhs) { return lhs.Value == rhs.Value; }
         friend bool operator!=(const Matrix8x8& lhs, const Matrix8x8& rhs) { return !(lhs == rhs); }
+
+    private:
+        static uint64_t selectBit(int i, int j) { return (uint64_t)1 << (j + (7 - i) * 8); }
     };
 }

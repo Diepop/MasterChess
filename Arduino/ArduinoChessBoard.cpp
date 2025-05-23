@@ -83,9 +83,8 @@ namespace Arduino
         throw std::runtime_error("Invalid!");
     }
 
-    Vector2Int ArduinoChessBoard::SelectPosition(Math::Area a)
+    Vector2Int ArduinoChessBoard::SelectPosition(Math::Area area)
     {
-        auto area = Matrix8x8(selectedPiece->PossibleMovements().MappedArea() | selectedPiece->Position());
         auto v1 = arduino->ReadMatrix();
         Matrix8x8 v2;
     start:
@@ -115,8 +114,6 @@ namespace Arduino
         for (int j = 0; j < 8; ++j)
         {
             if (!x(i, j)) continue;
-            if (!a.IncludesPosition({ i, j }))
-                goto start;
             auto v = Vector2Int(i, j);
             if (selectedPiece->Position() == v)
                 PrintBoard();
@@ -204,12 +201,19 @@ namespace Arduino
         assert(dynamic_cast<MasterChess::ChessGame*>(game));
         this->game = static_cast<MasterChess::ChessGame*>(game);
         PrintBoard();
-        CheckBoard();
     }
 
     void ArduinoChessBoard::OnMovementExecution(MasterChess::IMovement* movement)
     {
         PrintBoard();
+    }
+
+    void ArduinoChessBoard::OnPlayerColorChange(MasterChess::IPlayer* player)
+    {
+        Matrix8x8 area;
+        for (auto piece : game->Board()->Pieces()) if (piece->Player() == player)
+            area(piece->Position(), true);
+        Lighten(player->Color(), area);
     }
 
     MasterChess::ChessGame* ArduinoChessBoard::CurrentGame()

@@ -10,8 +10,8 @@ set(UnitySources
 )
 
 if (WIN32)
-    set(PluginPath "F:/vcpkg/installed/x64-windows/tools/grpc/grpc_cpp_plugin.exe")
-    set(IncPath "F:/vcpkg/installed/x64-windows/include/")
+    set(PluginPath "${VCPKG_INSTALLED_DIR}/x64-windows/tools/grpc/grpc_cpp_plugin.exe")
+    set(IncPath "${VCPKG_INSTALLED_DIR}/x64-windows/include/")
 endif()
 
 list(TRANSFORM UnitySources PREPEND "${UnityDir}generated/")
@@ -31,4 +31,4 @@ add_library(Unity STATIC
 )
 
 find_package(gRPC CONFIG REQUIRED)
-target_link_libraries(Unity PRIVATE gRPC::gpr gRPC::upb gRPC::grpc gRPC::grpc++)
+target_link_libraries(Unity PRIVATE gRPC::gpr gRPC::grpc gRPC::grpc++ gRPC::grpc++_alts)

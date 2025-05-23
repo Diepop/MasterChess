@@ -42,6 +42,8 @@ namespace Arduino
 
         void OnMovementExecution(MasterChess::IMovement* movement) override;
 
+        void OnPlayerColorChange(MasterChess::IPlayer* player) override;
+
         MasterChess::ChessGame* CurrentGame() override;
         
     private:

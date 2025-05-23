@@ -49,18 +49,22 @@ namespace MasterChess
 
         IPlayer* Player(int i) const { return players[i].get(); }
 
+        int PlayerCount() const { return (int)players.size(); }
+
         virtual IPlayer* AddPlayer(unique_ptr<IPlayer> player);
 
         vector<IPiece*> Pieces() const;
 
         virtual IPiece* AddPiece(unique_ptr<IPiece> piece);
 
-        int PlayCount() const { return (int)movements.size(); }
+        int MoveCount() const { return (int)movements.size(); }
 
         IPlayer* CurrentPlayer() const { return currentPlayer; }
 
         virtual IPiece* RequestPromotion(IPiece* piece);
 
+        virtual void NotifyPlayerColorChange(IPlayer* player);
+        
     protected:
 
         virtual void ExecuteMovement(unique_ptr<IMovement> movement);
@@ -77,16 +81,7 @@ namespace MasterChess
         vector<unique_ptr<IPiece>> pieces;
         vector<unique_ptr<IMovement>> movements;
         IPlayer* currentPlayer;
-        struct GameBroadcastListener : IGameListener
-        {
-            void OnGameStart(Game* game) override;
-            void OnMovementExecution(IMovement* movement) override;
-            void OnMovementUndo(IMovement* movement) override;
-            void OnGameOver(GameResult* result) override;
-            void AddListener(IGameListener* listener);
-        private:
-            std::vector<IGameListener*> listeners;
-        }listener;
+        vector<IGameListener*> listeners;
         bool isSimulating;
     };
     

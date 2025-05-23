@@ -14,15 +14,22 @@
 
 #include <conio.h>
 #include <Windows.h>
-#include <fmt/format.h>
+#include <format>
 
 #include <cassert>
+
+#include "Unity/UnityGameListener.hpp"
 
 namespace MasterChess
 {
     ConsoleChessGameListener::ConsoleChessGameListener(IConsole* console, const Vector2Int& size) : console(console), size(size), game(nullptr), board(nullptr)
     {
 
+    }
+
+    void ConsoleChessGameListener::OnPlayerColorChange(IPlayer* player)
+    {
+        PrintBoard();
     }
 
     void ConsoleChessGameListener::OnGameStart(Game* game)
@@ -111,8 +118,19 @@ namespace MasterChess
 
         auto players = game->Players();
         auto it = std::find(players.begin(), players.end(), game->CurrentPlayer());
-        console->DrawString({ 100, 27 }, fmt::format("{} turn", it == players.begin() ? "White" : "Black"));
-        console->DrawString({ 100, 28 }, fmt::format("Fen: {}", game->Fen()));
+        console->DrawString({ 100, 27 }, "{} turn", it == players.begin() ? "White" : "Black");
+        console->DrawString({ 100, 28 }, "Fen: {}", game->Fen());
+        console->DrawString({ 100, 29 }, "Whites Color = {:06X}, Blacks Color = {:06X}", game->Player(0)->Color(), game->Player(1)->Color());
+        if (UnityListener)
+        {
+            auto& contexts = UnityListener->Contexts();
+            if (!contexts.empty())
+            {
+                console->DrawString({ 100, 30 }, "Connected Clients:");
+                for (int i = 0; i < (int)contexts.size(); ++i)
+                    console->DrawString({ 100, 31 + i }, "{}", contexts[i]->peer());
+            }
+        }
 
         console->Display();
     }
@@ -140,9 +158,9 @@ namespace MasterChess
         case 0x20:
         case 0x0D:
             return;
-        default:
-            MessageBoxA(nullptr, "Key Pressed!", fmt::format("{:x}", k).c_str(), MB_OK);
-        case 224: break;
+        //default:
+        //    MessageBoxA(nullptr, "Key Pressed!", std::format("{:x}", k).c_str(), MB_OK);
+        //case 224: break;
         }
     }
 
@@ -153,10 +171,10 @@ namespace MasterChess
         {
             console->Clear();
             console->DrawString({ 0, 0 }, "Select the piece to promote, press Up and Down to select and enter or space to confirm:");
-            console->DrawString({ 0, 1 }, fmt::format("{}Promote to Queen.", index == 0 ? '>' : ' '));
-            console->DrawString({ 0, 2 }, fmt::format("{}Promote to Knight.", index == 1 ? '>' : ' '));
-            console->DrawString({ 0, 3 }, fmt::format("{}Promote to Rook.", index == 2 ? '>' : ' '));
-            console->DrawString({ 0, 4 }, fmt::format("{}Promote to Bishop.", index == 3 ? '>' : ' '));
+            console->DrawString({ 0, 1 }, std::format("{}Promote to Queen.", index == 0 ? '>' : ' '));
+            console->DrawString({ 0, 2 }, std::format("{}Promote to Knight.", index == 1 ? '>' : ' '));
+            console->DrawString({ 0, 3 }, std::format("{}Promote to Rook.", index == 2 ? '>' : ' '));
+            console->DrawString({ 0, 4 }, std::format("{}Promote to Bishop.", index == 3 ? '>' : ' '));
             console->Display();
         };
         draw();

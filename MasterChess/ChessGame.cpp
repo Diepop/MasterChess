@@ -5,7 +5,7 @@
 #include "ChessPieces/King.hpp"
 #include "ChessPieces/Pawn.hpp"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <sstream>
 
@@ -56,7 +56,7 @@ namespace MasterChess
         {
             auto result = std::make_unique<GameResult>();
             result->Losers = { whitePlayer, blackPlayer };
-            result->Message = fmt::format("Draw by insufficient material.");
+            result->Message = std::format("Draw by insufficient material.");
             return result;
         }
         auto hasLegalMove = [&]
@@ -81,12 +81,12 @@ namespace MasterChess
         {
             result->Winners = { currentPlayer != whitePlayer ? whitePlayer : blackPlayer };
             result->Losers = { currentPlayer };
-            result->Message = fmt::format("{} wins by checkmate.", currentPlayer == whitePlayer ? "White" : "Black");
+            result->Message = std::format("{} wins by checkmate.", currentPlayer == whitePlayer ? "White" : "Black");
         }
         else
         {
             result->Losers = { whitePlayer, blackPlayer };
-            result->Message = fmt::format("Draw by stalemate.");
+            result->Message = std::format("Draw by stalemate.");
         }
         return result;
     }
@@ -108,9 +108,12 @@ namespace MasterChess
 
     string ChessGame::Fen()
     {
+        if (!fen.empty())
+            return fen;
         auto board = Board();
         assert(board && "Use AddListener!");
-        std::stringstream ss;
+        ss.str({});
+        ss.clear();
         for (int j = 8 - 1; j >= 0; --j)
         {
             auto k = 0;
@@ -160,8 +163,8 @@ namespace MasterChess
         ss << ' ';
         ss << std::to_string(PeaceCount());
         ss << ' ';
-        ss << std::to_string(std::max(PlayCount(), 1));
-        return ss.str();
+        ss << std::to_string(std::max(MoveCount(), 1));
+        return fen = ss.str();
     }
 
     void ChessGame::ExecuteMovement(unique_ptr<IMovement> movement)
@@ -170,6 +173,7 @@ namespace MasterChess
         if (dynamic_cast<Pawn*>(movement->Piece()) || dynamic_cast<ChessPiece::CaptureMovement*>(movement.get()))
             peaceCount = 0;
         Game::ExecuteMovement(move(movement));
+        fen.clear();
     }
 
     void ChessGame::UndoLastMovement()
@@ -178,5 +182,6 @@ namespace MasterChess
         if (!dynamic_cast<Pawn*>(movement->Piece()) && !dynamic_cast<ChessPiece::CaptureMovement*>(movement))
             --peaceCount;
         Game::UndoLastMovement();
+        fen.clear();
     }
 }

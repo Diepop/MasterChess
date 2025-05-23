@@ -3,6 +3,7 @@
 #include "MasterChess/IInput.hpp"
 
 #include <string>
+#include <random>
 
 namespace MasterChess
 {
@@ -19,7 +20,7 @@ namespace MasterChess
         StockFishInput& operator=(const StockFishInput&) = delete;
         StockFishInput& operator=(StockFishInput&&) = delete;
 
-        ~StockFishInput() override;
+        ~StockFishInput();
 
         void OnGameStart(Game* game) override;
 
@@ -38,6 +39,8 @@ namespace MasterChess
         King* blackKing;
         bool whiteLeftRook, whiteRightRook, blackLeftRook, blackRightRook;
         char nextPromotion;
+        std::random_device rd;
+        std::uniform_int_distribution<int> dist;
         std::string ToFenString(IPlayer* currentPlayer) const;
     };
 }

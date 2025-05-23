@@ -2,6 +2,8 @@
 #include "Game.hpp"
 #include "ChessPlayer.hpp"
 
+#include <sstream>
+
 namespace MasterChess
 {
     struct ChessBoard;
@@ -37,5 +39,7 @@ namespace MasterChess
         King* whiteKing;
         King* blackKing;
         int peaceCount;
+        string fen;
+        std::stringstream ss;
     };
 }

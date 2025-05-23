@@ -9,7 +9,7 @@
 #include "MasterChess/ChessPieces/Queen.hpp"
 #include "MasterChess/ChessPieces/Rook.hpp"
 
-#include <fmt/format.h>
+#include <format>
 
 #include <cassert>
 #include <mutex>
@@ -17,6 +17,9 @@
 #include <regex>
 #include <sstream>
 #include <optional>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 namespace MasterChess
 {
@@ -69,7 +72,7 @@ namespace MasterChess
 
         void Command(std::string_view cmd)
         {
-            auto str = fmt::format("{}\n", cmd);
+            auto str = std::format("{}\n", cmd);
             process.write(str);
         }
 
@@ -87,7 +90,7 @@ namespace MasterChess
 
         Movement Go(int depth)
         {
-            Command(fmt::format("go depth {}", depth));
+            Command(std::format("go depth {}", depth));
             std::regex r(R"(bestmove\s+([a-h][1-8][a-h][1-8][QqRrBbNn]?)(?:\s+ponder\s([a-h][1-8][a-h][1-8][QqRrBbNn]?))?)");
             std::smatch m;
             std::string token;
@@ -194,9 +197,12 @@ namespace MasterChess
 
     unique_ptr<IMovement> StockFishInput::CreateMovement(IBoard*, IPlayer* player)
     {
+        std::this_thread::sleep_for(4s + 4s / (dist(rd) % 5 + 1));
+        if (dynamic_cast<ChessPiece::CaptureMovement*>(game->LastMovement()))
+            std::this_thread::sleep_for(2s);
         auto fen = game->Fen();
-        fish->Command(fmt::format("position fen {}", fen));
-        auto [origin, destination, promo, ponder] = fish->Go(5);
+        fish->Command(std::format("position fen {}", fen));
+        auto [origin, destination, promo, ponder] = fish->Go(10 + dist(rd) % 10);
         auto piece = board->At(origin);
         assert(piece);
         auto moves = piece->PossibleMovements();
@@ -277,7 +283,7 @@ namespace MasterChess
         ss << ' ';
         ss << std::to_string(game->PeaceCount());
         ss << ' ';
-        ss << std::to_string(std::max(game->PlayCount(), 1));
+        ss << std::to_string(std::max(game->MoveCount(), 1));
         return ss.str();
     }
 }

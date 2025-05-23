@@ -4,7 +4,56 @@
 #include <vector>
 #include <array>
 #include <tuple>
-#include <fmt/format.h>
+#include <format>
+
+namespace fmt
+{
+    template<std::ranges::range Range, class Delim>
+    struct Join
+    {
+        Range range;
+        Delim delim;
+    };
+
+    template<std::ranges::range Range, class Delim>
+    auto join(Range range, Delim delim) -> Join<Range, Delim>
+    {
+        return { std::move(range), std::move(delim) };
+    }
+}
+
+namespace std
+{
+    template<class Range, class Delim>
+    struct formatter<fmt::Join<Range, Delim>>
+    {
+        using element_type = ranges::range_value_t<Range>;
+
+        formatter<element_type> form;
+        formatter<Delim> dForm;
+
+        constexpr auto parse(auto& ctx)
+        {
+            return form.parse(ctx);
+        }
+
+        auto format(fmt::Join<Range, Delim> p, auto& ctx) const
+        {
+            auto it = ranges::begin(p.range);
+            auto end = ranges::end(p.range);
+            if (it != end)
+                form.format(*it++, ctx);
+            for (; it != end; ++it)
+            {
+                dForm.format(p.delim, ctx);
+                form.format(*it, ctx);
+            }
+            return ctx.out();
+        }
+
+    };
+
+}
 
 namespace Arduino
 {
@@ -100,8 +149,8 @@ namespace Arduino
     {
         static inline const string Id =
             sizeof...(Args) > 0 ?
-            format("{}: {};", Serializer<Result>::Id, fmt::join(vector<string_view>{ Serializer<Args>::Id... }, " ")) :
-            fmt::format("{}:;", Serializer<Result>::Id);
+            std::format("{}: {};", Serializer<Result>::Id, fmt::join(vector<string_view>{ Serializer<Args>::Id... }, " ")) :
+            std::format("{}:;", Serializer<Result>::Id);
     };
     
 }

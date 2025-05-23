@@ -8,15 +8,20 @@
 #include "MasterChess/Boards/ChessBoard.hpp"
 #include "MasterChess/Inputs/StockfishInput.hpp"
 #include "MasterChess/Listeners/ConsoleChessGameListener.hpp"
+#include "MasterChess/Listeners/GameBroadcastListener.hpp"
 #include "Math/Area.hpp"
 #include "Unity/UnityGameListener.hpp"
 #include "Windows/Console.hpp"
 
+#include <format>
 #include <grpcpp/server_builder.h>
-#include <fmt/format.h>
+
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 namespace MasterChess
-{   
+{
     void CreateArmy(vector<unique_ptr<ChessPiece>>& v, ChessPlayer* player, ChessBoard* board, const Vector2Int& zero, const Vector2Int& right, const Vector2Int& up)
     {
         using std::make_unique;
@@ -54,7 +59,6 @@ int main(int argc, char* argv[])
     using namespace MasterChess;
     using namespace Windows;
     using namespace Arduino;
-    GameResult result;
     try
     {
         auto console = Console(220, 220);
@@ -64,7 +68,7 @@ int main(int argc, char* argv[])
         //auto serial  = SerialPort("COM3", 2000000);
         //auto arduino = ArduinoExported(&serial);
         //auto arduinoBoard = ArduinoChessBoard(&arduino, &consoleBoard);
-        //auto req = ArduinoChessBoard::PlayRequester(&*board, &fish);
+        //auto req = ArduinoChessBoard::PlayRequester(&arduinoBoard, &fish);
 
         auto board = std::make_unique<ChessBoard>();
 
@@ -80,25 +84,26 @@ int main(int argc, char* argv[])
 
         auto game = ChessGame(move(board), move(players), move(pieces));
 
-        auto unityRpc = Unity::UnityGameListener();
-        game.AddListener(&unityRpc);
-
         game.AddListener(&consoleBoard);
-
+        //game.AddListener(&arduinoBoard);
         game.AddListener(&fish);
 
+        auto unityListener = Unity::UnityGameListener("fiap");
         auto server = grpc::ServerBuilder()
             .AddListeningPort("0.0.0.0:50051", grpc::InsecureServerCredentials())
-            .RegisterService(&unityRpc)
+            .RegisterService(&unityListener)
             .BuildAndStart();
+        game.AddListener(&unityListener);
+        consoleBoard.UnityListener = &unityListener;
 
-        result = game.Play();
-        server->Shutdown();
+        //while (unityListener.Contexts().empty());
+
+        auto result = game.Play();
+        server->Shutdown(std::chrono::system_clock::now() + 5s);
     }
     catch (std::exception& e)
     {
-        fmt::print("{}\n", e.what());
+        std::print(std::cout, "{}\n", e.what());
         return -1;
     }
-    fmt::format("Game end!\n{}\n", result.Message);
 }

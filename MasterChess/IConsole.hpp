@@ -3,6 +3,8 @@
 
 #include <string_view>
 
+#include <format>
+
 namespace MasterChess
 {
     using Math::Vector2Int;
@@ -64,6 +66,14 @@ namespace MasterChess
         /// <param name="position">Posição do primeiro caractér.</param>
         /// <param name="sv">Texto a ser desenhado.</param>
         virtual void DrawString(const Vector2Int& position, std::string_view sv) = 0;
+
+        template<class... Args>
+            requires (sizeof...(Args) != 0)
+        void DrawString(const Vector2Int& position, std::format_string<Args...> sv, Args&&... args)
+        {
+            return DrawString(position, std::format(sv, std::forward<Args>(args)...));
+        }
+
     };
 
 }

@@ -2,32 +2,48 @@ syntax = "proto3";
 
 package UnityRpc;
 
-import "google/protobuf/empty.proto";
-
-enum PlayerType {
-	White = 0;
-	Black = 1;
+enum PieceType {
+	Queen = 0;
+	Rook = 1;
+	Bishop = 2;
+	Knight = 3;
 }
 
-message Vector2Int {
+message Point2D {
     int32 x = 1;
     int32 y = 2;
 }
 
+message BoardPosition {
+	int32 playerIndex = 1;
+    string fenString = 2;
+}
+
 message PieceMovement {
-	enum PieceType {
-		Queen = 0;
-		Rook = 1;
-		Bishop = 2;
-		Knight = 3;
-	}
-    Vector2Int origin = 1;
-    Vector2Int destination = 2;
-	bool isEnPassant = 3;
-    optional PieceType promotionType = 4;
-    bool isCastling = 5;
-    string fenString = 6;
-	PlayerType currentPlayer = 7;
+	
+	int32 playerIndex = 1;
+    Point2D origin = 2;
+	Point2D destination = 3;
+}
+
+message EnPassant {
+	int32 playerIndex = 1;
+	Point2D origin = 2;
+	Point2D destination = 3;
+    Point2D capturedPosition = 4;
+}
+
+message Castle {
+	int32 playerIndex = 1;
+    repeated Point2D origins = 2;
+	repeated Point2D destinations = 3;
+}
+
+message Promotion {
+	int32 playerIndex = 1;
+	Point2D origin = 2;
+	Point2D destination = 3;
+	PieceType pieceType = 4;
 }
 
 message Result {
@@ -36,10 +52,43 @@ message Result {
         Draw = 1;
     }
     StatusType status = 1;
-    repeated PlayerType winners = 2;
-    repeated PlayerType losers = 3;
+    repeated int32 winners = 2;
+    repeated int32 losers = 3;
+}
+
+message BoardControlResponse {
+    bool accepted = 1;
+}
+
+message ServerMessage {
+    oneof notification {
+        PieceMovement normalMovement = 1;
+        EnPassant enPassant = 2;
+        Castle castle = 3;
+        Promotion promotion = 4;
+        Result result = 5;
+        BoardPosition position = 6;
+        BoardControlResponse controlResponse = 7;
+    }
+}
+
+message ColorChange {
+	int32 player = 1;
+	uint32 color = 2;
+}
+
+message BoardControlRequest {
+    string password = 1;
+    repeated ColorChange colorChanges = 2;
+}
+
+message ClientMessage {
+    oneof command {
+        BoardControlRequest boardControl = 1;
+        ColorChange colorChange = 2;
+    }
 }
 
 service UnityRPCBoard {
-    rpc Start(google.protobuf.Empty) returns(stream PieceMovement);
+    rpc Start(stream ClientMessage) returns (stream ServerMessage);
 }

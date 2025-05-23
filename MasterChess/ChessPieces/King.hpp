@@ -15,6 +15,8 @@ namespace MasterChess
             void Execute() override;
             void Undo() override;
             IPiece* CastlePiece() const;
+            const Vector2Int& CastlePieceOrigin() const { return castlePieceOrigin; }
+            const Vector2Int& CastlePieceDestination() const { return castlePieceDestination; }
         private:
             IPiece* castlePiece;
             Vector2Int castlePieceOrigin, castlePieceDestination;

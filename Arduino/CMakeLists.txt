@@ -1,8 +1,4 @@
 ﻿
-if(WIN32)
-#find_library(fmt CONFIG REQUIRED)
-endif()
-
 add_library(Arduino STATIC 
 	"SerialPort.hpp" "SerialPort.cpp"
 	"SimpleRPC.hpp" "SimpleRPC.cpp"
@@ -12,6 +8,6 @@ add_library(Arduino STATIC
 	"Matrix8x8.hpp"
  )
 
-if(WIN32)
-target_link_libraries(Arduino fmt::fmt)
-endif()
+find_package(boost_asio REQUIRED CONFIG)
+target_link_libraries(Arduino PRIVATE Boost::asio)
+

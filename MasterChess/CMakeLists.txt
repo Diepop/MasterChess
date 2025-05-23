@@ -9,7 +9,7 @@ add_library (MasterChess STATIC
     "IInput.hpp"
     "IGameListener.hpp"
     
-    "ChessPlayer.hpp"
+    "ChessPlayer.hpp" "ChessPlayer.cpp"
     "Game.hpp" "Game.cpp"
     "ChessGame.hpp" "ChessGame.cpp"
 
@@ -29,6 +29,8 @@ add_library (MasterChess STATIC
 
     "Inputs/StockfishInput.hpp" "Inputs/StockfishInput.cpp"
     "Inputs/TwoStepsInput.hpp" "Inputs/TwoStepsInput.cpp"
+    "Listeners/GameBroadcastListener.hpp" "Listeners/GameBroadcastListener.cpp"
 )
 
-target_link_libraries(MasterChess PUBLIC fmt::fmt)
+find_package(tiny-process-library CONFIG REQUIRED)
+target_link_libraries(MasterChess PRIVATE tiny-process-library::tiny-process-library)

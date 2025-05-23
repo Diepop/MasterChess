@@ -22,12 +22,12 @@ namespace Arduino
         std::vector<uint8_t> ReadAll();
 
         size_t Write(std::string_view sv) { return Write(sv.data(), (int)sv.length()); }
-        size_t WriteChar(char d) { return Write(&d, sizeof d); }
+        size_t WriteChar(char d) { return Write(&d, sizeof(d)); }
         template<class T>
         T ReadTrivialType()
         {
             T result;
-            Read(&result, sizeof T);
+            Read(&result, sizeof(T));
             return result;
         }
         char ReadChar() { return ReadTrivialType<char>(); }
